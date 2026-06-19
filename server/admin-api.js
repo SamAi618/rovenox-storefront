@@ -2,6 +2,7 @@ import { Router } from "express";
 import { requireAdmin, verifyAdminLogin } from "./auth.js";
 import { db } from "./db.js";
 import { createMediaRecord, deleteMediaAsset, uploadImage } from "./media.js";
+import { normalizeStringList, requireInteger, requireString } from "./validators.js";
 
 export const adminApi = Router();
 
@@ -52,4 +53,89 @@ adminApi.delete("/media/:id", requireAdmin, async (request, response, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+function readProductPayload(body) {
+  return {
+    slug: requireString(body.slug, "slug"),
+    name: requireString(body.name, "name"),
+    category: requireString(body.category, "category"),
+    price: requireInteger(body.price, "price"),
+    description: requireString(body.description, "description"),
+    colorsJson: JSON.stringify(normalizeStringList(body.colors, "colors")),
+    sizesJson: JSON.stringify(normalizeStringList(body.sizes, "sizes")),
+    badge: requireString(body.badge || "Carry", "badge"),
+    tone: requireString(body.tone || "tone-graphite", "tone"),
+    mainImageId: body.mainImageId ? requireInteger(body.mainImageId, "mainImageId") : null,
+    sortOrder: requireInteger(body.sortOrder || 0, "sortOrder"),
+    visible: body.visible === false ? 0 : 1
+  };
+}
+
+adminApi.get("/products", requireAdmin, (request, response) => {
+  const products = db.prepare(`
+    SELECT products.*, media_assets.url AS image_url
+    FROM products
+    LEFT JOIN media_assets ON media_assets.id = products.main_image_id
+    ORDER BY products.sort_order ASC, products.id ASC
+  `).all();
+  response.json({ products });
+});
+
+adminApi.post("/products", requireAdmin, (request, response) => {
+  const product = readProductPayload(request.body || {});
+  const result = db.prepare(`
+    INSERT INTO products (
+      slug, name, category, price, description, colors_json, sizes_json,
+      badge, tone, main_image_id, sort_order, visible
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    product.slug,
+    product.name,
+    product.category,
+    product.price,
+    product.description,
+    product.colorsJson,
+    product.sizesJson,
+    product.badge,
+    product.tone,
+    product.mainImageId,
+    product.sortOrder,
+    product.visible
+  );
+  response.status(201).json({ id: result.lastInsertRowid });
+});
+
+adminApi.put("/products/:id", requireAdmin, (request, response) => {
+  const product = readProductPayload(request.body || {});
+  const result = db.prepare(`
+    UPDATE products
+    SET slug = ?, name = ?, category = ?, price = ?, description = ?,
+      colors_json = ?, sizes_json = ?, badge = ?, tone = ?, main_image_id = ?,
+      sort_order = ?, visible = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(
+    product.slug,
+    product.name,
+    product.category,
+    product.price,
+    product.description,
+    product.colorsJson,
+    product.sizesJson,
+    product.badge,
+    product.tone,
+    product.mainImageId,
+    product.sortOrder,
+    product.visible,
+    Number(request.params.id)
+  );
+  if (result.changes === 0) response.status(404).json({ error: "Product not found" });
+  else response.json({ ok: true });
+});
+
+adminApi.delete("/products/:id", requireAdmin, (request, response) => {
+  const result = db.prepare("DELETE FROM products WHERE id = ?").run(Number(request.params.id));
+  if (result.changes === 0) response.status(404).json({ error: "Product not found" });
+  else response.json({ ok: true });
 });

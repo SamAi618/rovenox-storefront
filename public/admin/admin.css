@@ -99,3 +99,44 @@ button {
   overflow-wrap: anywhere;
   color: #5c5c55;
 }
+
+.split-editor {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) 360px;
+  gap: 18px;
+  align-items: start;
+}
+
+.record-list,
+.editor-form {
+  display: grid;
+  gap: 10px;
+}
+
+.record-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #deded8;
+}
+
+.record-row button:first-child {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  background: #fff;
+  color: #20201d;
+}
+
+.editor-form {
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #deded8;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+}
