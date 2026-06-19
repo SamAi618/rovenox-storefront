@@ -35,6 +35,13 @@ app.use("/api/admin", adminApi);
 app.get("/admin", (request, response) => {
   response.sendFile(path.join(publicDir, "admin", "index.html"));
 });
+app.use((error, request, response, next) => {
+  if (response.headersSent) {
+    next(error);
+    return;
+  }
+  response.status(error.status || 500).json({ error: error.message || "Server error" });
+});
 app.use("/uploads", express.static(uploadsDir, { fallthrough: false }));
 app.use(express.static(publicDir));
 

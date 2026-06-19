@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { requireAdmin, verifyAdminLogin } from "./auth.js";
+import { db } from "./db.js";
+import { createMediaRecord, deleteMediaAsset, uploadImage } from "./media.js";
 
 export const adminApi = Router();
 
@@ -28,4 +30,26 @@ adminApi.get("/session", (request, response) => {
     authenticated: Boolean(request.session?.admin),
     username: request.session?.admin?.username || null
   });
+});
+
+adminApi.get("/media", requireAdmin, (request, response) => {
+  const media = db.prepare("SELECT * FROM media_assets ORDER BY created_at DESC, id DESC").all();
+  response.json({ media });
+});
+
+adminApi.post("/media", requireAdmin, uploadImage.single("image"), (request, response) => {
+  if (!request.file) {
+    response.status(400).json({ error: "Image file is required" });
+    return;
+  }
+  response.status(201).json({ media: createMediaRecord(request.file) });
+});
+
+adminApi.delete("/media/:id", requireAdmin, async (request, response, next) => {
+  try {
+    await deleteMediaAsset(Number(request.params.id));
+    response.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
 });

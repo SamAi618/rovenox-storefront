@@ -50,4 +50,62 @@ logoutButton.addEventListener("click", async () => {
   location.reload();
 });
 
+document.addEventListener("click", (event) => {
+  const viewButton = event.target.closest("[data-view]");
+  if (!viewButton) return;
+  if (viewButton.dataset.view === "media") renderMediaView().catch(showError);
+});
+
+async function renderMediaView() {
+  viewTitle.textContent = "媒体库";
+  viewBody.innerHTML = `
+    <form id="uploadForm" class="panel">
+      <input type="file" name="image" accept="image/*" required>
+      <button type="submit">上传图片</button>
+    </form>
+    <p class="message" id="viewMessage"></p>
+    <div id="mediaGrid" class="media-grid"></div>
+  `;
+  document.querySelector("#uploadForm").addEventListener("submit", uploadMedia);
+  await loadMediaGrid();
+}
+
+async function loadMediaGrid() {
+  const data = await api("/api/admin/media");
+  document.querySelector("#mediaGrid").innerHTML = data.media.map((item) => `
+    <article class="media-card">
+      <img src="${item.url}" alt="${item.original_name}">
+      <strong>${item.original_name}</strong>
+      <code>${item.url}</code>
+      <button data-delete-media="${item.id}">删除</button>
+    </article>
+  `).join("");
+}
+
+async function uploadMedia(event) {
+  event.preventDefault();
+  const formData = new FormData(event.currentTarget);
+  const response = await fetch("/api/admin/media", { method: "POST", body: formData });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || `Upload failed: ${response.status}`);
+  event.currentTarget.reset();
+  await loadMediaGrid();
+}
+
+document.addEventListener("click", async (event) => {
+  const deleteButton = event.target.closest("[data-delete-media]");
+  if (!deleteButton) return;
+  try {
+    await api(`/api/admin/media/${deleteButton.dataset.deleteMedia}`, { method: "DELETE" });
+    await loadMediaGrid();
+  } catch (error) {
+    showError(error);
+  }
+});
+
+function showError(error) {
+  const message = document.querySelector("#viewMessage") || loginMessage;
+  message.textContent = error.message;
+}
+
 checkSession().catch(() => {});
