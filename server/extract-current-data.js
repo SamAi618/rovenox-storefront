@@ -15,11 +15,10 @@ export function slugify(value) {
 }
 
 export function extractProducts(appSource) {
-  const marker = "const products = ";
-  const start = appSource.indexOf(marker);
-  if (start === -1) throw new Error("Cannot find products array in app.js");
+  const declaration = /\b(?:const|let)\s+products\s*=\s*/.exec(appSource);
+  if (!declaration) throw new Error("Cannot find products array in app.js");
 
-  const arrayStart = appSource.indexOf("[", start + marker.length);
+  const arrayStart = appSource.indexOf("[", declaration.index + declaration[0].length);
   if (arrayStart === -1) throw new Error("Cannot find products array start in app.js");
 
   let depth = 0;

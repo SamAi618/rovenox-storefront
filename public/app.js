@@ -1,4 +1,4 @@
-const products = [
+let products = [
   {
     id: "rn-bag-01",
     name: "Northline Structured Carry Bag",
@@ -479,5 +479,19 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-setLanguage(activeLanguage);
-window.requestAnimationFrame(() => document.body.classList.add("is-ready"));
+async function loadProducts() {
+  const response = await fetch("/api/public/products");
+  if (!response.ok) throw new Error(`Cannot load products: ${response.status}`);
+  const data = await response.json();
+  if (!Array.isArray(data.products)) throw new Error("Invalid products response");
+  products = data.products;
+}
+
+loadProducts()
+  .catch((error) => {
+    console.error(error);
+  })
+  .finally(() => {
+    setLanguage(activeLanguage);
+    window.requestAnimationFrame(() => document.body.classList.add("is-ready"));
+  });

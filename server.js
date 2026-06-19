@@ -3,6 +3,7 @@ import session from "express-session";
 import { mkdirSync } from "node:fs";
 import { initializeDatabase } from "./server/db.js";
 import { publicDir, uploadsDir } from "./server/paths.js";
+import { publicApi } from "./server/public-api.js";
 
 initializeDatabase();
 mkdirSync(uploadsDir, { recursive: true });
@@ -27,6 +28,7 @@ app.get("/api/health", (request, response) => {
   response.json({ ok: true });
 });
 
+app.use("/api/public", publicApi);
 app.use("/uploads", express.static(uploadsDir, { fallthrough: false }));
 app.use(express.static(publicDir));
 
