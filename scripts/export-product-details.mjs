@@ -3,6 +3,7 @@ import path from "node:path";
 import vm from "node:vm";
 
 const projectRoot = path.resolve(import.meta.dirname, "..");
+const publicRoot = path.join(projectRoot, "public");
 const outputRoot = path.join(projectRoot, "output", "rovenox-product-details");
 
 function slugify(value) {
@@ -68,7 +69,7 @@ function manifestCategory(manifestPath) {
 async function copyImage(sourceRelativePath, destinationDirectory, prefix) {
   if (!sourceRelativePath) return null;
 
-  const sourcePath = path.join(projectRoot, sourceRelativePath);
+  const sourcePath = path.join(publicRoot, sourceRelativePath);
   const extension = path.extname(sourceRelativePath);
   const fileName = `${prefix}${extension}`;
   const destinationPath = path.join(destinationDirectory, fileName);
@@ -160,12 +161,12 @@ async function exportManifestCatalog(manifestItems) {
 }
 
 async function main() {
-  const appSource = await readFile(path.join(projectRoot, "app.js"), "utf8");
+  const appSource = await readFile(path.join(publicRoot, "app.js"), "utf8");
   const products = extractProducts(appSource);
 
   const manifestPaths = [
-    path.join(projectRoot, "images", "annekali", "watches-manifest.json"),
-    path.join(projectRoot, "images", "annekali", "products-manifest.json")
+    path.join(publicRoot, "images", "annekali", "watches-manifest.json"),
+    path.join(publicRoot, "images", "annekali", "products-manifest.json")
   ];
   const manifestItems = [];
 
