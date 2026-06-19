@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoveNox Admin</title>
+    <link rel="stylesheet" href="/admin/admin.css">
+  </head>
+  <body>
+    <main class="admin-shell">
+      <section class="login-panel" id="loginPanel">
+        <h1>RoveNox 后台</h1>
+        <form id="loginForm">
+          <label>账号<input name="username" autocomplete="username" required></label>
+          <label>密码<input name="password" type="password" autocomplete="current-password" required></label>
+          <button type="submit">登录</button>
+        </form>
+        <p class="message" id="loginMessage"></p>
+      </section>
+      <section class="dashboard" id="dashboard" hidden>
+        <aside class="sidebar">
+          <strong>RoveNox Admin</strong>
+          <button data-view="media">媒体库</button>
+          <button data-view="home">首页模块</button>
+          <button data-view="products">商品管理</button>
+          <button id="logoutButton">退出</button>
+        </aside>
+        <section class="workspace">
+          <header><h2 id="viewTitle">概览</h2></header>
+          <div id="viewBody"></div>
+        </section>
+      </section>
+    </main>
+    <script src="/admin/admin.js" defer></script>
+  </body>
+</html>

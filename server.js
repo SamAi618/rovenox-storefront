@@ -1,6 +1,8 @@
 import express from "express";
 import session from "express-session";
 import { mkdirSync } from "node:fs";
+import path from "node:path";
+import { adminApi } from "./server/admin-api.js";
 import { initializeDatabase } from "./server/db.js";
 import { publicDir, uploadsDir } from "./server/paths.js";
 import { publicApi } from "./server/public-api.js";
@@ -29,6 +31,10 @@ app.get("/api/health", (request, response) => {
 });
 
 app.use("/api/public", publicApi);
+app.use("/api/admin", adminApi);
+app.get("/admin", (request, response) => {
+  response.sendFile(path.join(publicDir, "admin", "index.html"));
+});
 app.use("/uploads", express.static(uploadsDir, { fallthrough: false }));
 app.use(express.static(publicDir));
 
