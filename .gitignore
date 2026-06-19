@@ -1,0 +1,13 @@
+.DS_Store
+**/.DS_Store
+
+.playwright-cli/
+.superpowers/
+output/
+
+node_modules/
+data/
+uploads/
+.env
+.env.*
+!.env.example
