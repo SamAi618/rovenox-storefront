@@ -3,6 +3,35 @@ import path from "node:path";
 import vm from "node:vm";
 import { publicDir } from "./paths.js";
 
+const defaultBrandModules = [
+  ["Louis Vuitton", "images/annekali/brands/louis-vuitton.png"],
+  ["Chanel", "images/annekali/brands/chanel.png"],
+  ["Gucci", "images/annekali/brands/gucci.png"],
+  ["Dior", "images/annekali/brands/dior.png"],
+  ["Hermes", "images/annekali/brands/hermes.png"],
+  ["Yves Saint Laurent", "images/annekali/brands/ysl.png"],
+  ["Celine", "images/annekali/brands/celine.png"],
+  ["Fendi", "images/annekali/brands/fendi.png"],
+  ["Burberry", "images/annekali/brands/burberry.png"],
+  ["Prada", "images/annekali/brands/prada.png"],
+  ["Bottega Veneta", "images/annekali/brands/bottega-veneta.png"],
+  ["Givenchy", "images/annekali/brands/givenchy.png"],
+  ["Balenciaga", "images/annekali/brands/balenciaga.png"],
+  ["Miu Miu", "images/annekali/brands/miu-miu.png"],
+  ["Loewe", "images/annekali/brands/loewe.png"]
+];
+
+const defaultCategoryModules = [
+  ["ROLEX", "images/annekali/watches/rolex-1051164-rolex-datejust-m126334-0022.webp", "Rolex watches"],
+  ["Audemars Piguet", "images/annekali/watches/audemars-1051447-audemars-piguet-royal-oak-chronograph-26331s.webp", "Audemars Piguet watches"],
+  ["Cartier", "images/annekali/watches/cartier-1051020-ballon-bleu-de-cartier-wjbb0042.webp", "Cartier watches"],
+  ["ROLEX DAYTONA", "images/annekali/watches/rolex-1051143-rolex-cosmograph-daytona-m116519ln-0038.webp", "Rolex Daytona watches"],
+  ["Patek Philippe", "images/annekali/watches/patek-1051397-5711-1r-001-patek-philippe-nautilus.webp", "Patek Philippe watches"],
+  ["IWC", "images/annekali/watches/iwc-1051050-iwc-pilot-series-iw327006-watch.webp", "IWC watches"],
+  ["Tag Heuer", "images/annekali/watches/tag-heuer-1051372-tag-heuer-carrera-automatic-chronograph-diam.webp", "Tag Heuer watches"],
+  ["PATEK PHILIPPE", "images/annekali/watches/patek-1051399-5164a-patek-philippe-aquanaut.webp", "Patek Philippe Nautilus watches"]
+];
+
 export function slugify(value) {
   return String(value)
     .normalize("NFKD")
@@ -81,7 +110,26 @@ export function extractImageModules(indexSource) {
     }
   }
 
-  return modules;
+  if (modules.length > 0) return modules;
+
+  return [
+    ...defaultBrandModules.map(([title, imagePath], sortOrder) => ({
+      moduleType: "brand_logo",
+      linkUrl: "#related",
+      imagePath,
+      title,
+      alt: title,
+      sortOrder
+    })),
+    ...defaultCategoryModules.map(([title, imagePath, alt], sortOrder) => ({
+      moduleType: "image_category",
+      linkUrl: "#related",
+      imagePath,
+      title,
+      alt,
+      sortOrder
+    }))
+  ];
 }
 
 export async function loadCurrentStorefrontData() {

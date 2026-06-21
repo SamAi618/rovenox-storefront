@@ -28,3 +28,14 @@ test("extractImageModules reads brand and category image anchors", () => {
   assert.equal(modules[0].moduleType, "brand_logo");
   assert.equal(modules[1].title, "ROLEX");
 });
+
+test("extractImageModules falls back to default modules after dynamic container migration", () => {
+  const html = `
+    <section class="brand-logo-section" id="brandLogoSection" aria-label="Designer brand logos"></section>
+    <section class="image-category-section" id="imageCategorySection" aria-label="Watch brand image categories"></section>
+  `;
+  const modules = extractImageModules(html);
+  assert.equal(modules.length, 23);
+  assert.equal(modules[0].moduleType, "brand_logo");
+  assert.equal(modules[15].moduleType, "image_category");
+});

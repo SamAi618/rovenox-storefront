@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAdmin, verifyAdminLogin } from "./auth.js";
 import { db } from "./db.js";
-import { createMediaRecord, deleteMediaAsset, uploadImage } from "./media.js";
+import { createMediaRecord, deleteMediaAsset, updateMediaAsset, uploadImage } from "./media.js";
 import { normalizeStringList, requireInteger, requireString } from "./validators.js";
 
 export const adminApi = Router();
@@ -43,7 +43,19 @@ adminApi.post("/media", requireAdmin, uploadImage.single("image"), (request, res
     response.status(400).json({ error: "Image file is required" });
     return;
   }
-  response.status(201).json({ media: createMediaRecord(request.file) });
+  response.status(201).json({ media: createMediaRecord(request.file, request.body?.title) });
+});
+
+adminApi.put("/media/:id", requireAdmin, uploadImage.single("image"), async (request, response, next) => {
+  try {
+    const media = await updateMediaAsset(Number(request.params.id), {
+      title: request.body?.title,
+      file: request.file || null
+    });
+    response.json({ media });
+  } catch (error) {
+    next(error);
+  }
 });
 
 adminApi.delete("/media/:id", requireAdmin, async (request, response, next) => {
@@ -137,5 +149,61 @@ adminApi.put("/products/:id", requireAdmin, (request, response) => {
 adminApi.delete("/products/:id", requireAdmin, (request, response) => {
   const result = db.prepare("DELETE FROM products WHERE id = ?").run(Number(request.params.id));
   if (result.changes === 0) response.status(404).json({ error: "Product not found" });
+  else response.json({ ok: true });
+});
+
+function readHomeModulePayload(body) {
+  return {
+    moduleType: requireString(body.moduleType, "moduleType"),
+    title: requireString(body.title, "title"),
+    imageId: body.imageId ? requireInteger(body.imageId, "imageId") : null,
+    linkUrl: requireString(body.linkUrl || "#related", "linkUrl"),
+    sortOrder: requireInteger(body.sortOrder || 0, "sortOrder"),
+    visible: body.visible === false ? 0 : 1
+  };
+}
+
+adminApi.get("/home-modules", requireAdmin, (request, response) => {
+  const modules = db.prepare(`
+    SELECT home_modules.*, media_assets.url AS image_url
+    FROM home_modules
+    LEFT JOIN media_assets ON media_assets.id = home_modules.image_id
+    ORDER BY home_modules.module_type ASC, home_modules.sort_order ASC, home_modules.id ASC
+  `).all();
+  response.json({ modules });
+});
+
+adminApi.post("/home-modules", requireAdmin, (request, response) => {
+  const module = readHomeModulePayload(request.body || {});
+  const result = db.prepare(`
+    INSERT INTO home_modules (module_type, title, image_id, link_url, sort_order, visible)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(module.moduleType, module.title, module.imageId, module.linkUrl, module.sortOrder, module.visible);
+  response.status(201).json({ id: result.lastInsertRowid });
+});
+
+adminApi.put("/home-modules/:id", requireAdmin, (request, response) => {
+  const module = readHomeModulePayload(request.body || {});
+  const result = db.prepare(`
+    UPDATE home_modules
+    SET module_type = ?, title = ?, image_id = ?, link_url = ?, sort_order = ?,
+      visible = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(
+    module.moduleType,
+    module.title,
+    module.imageId,
+    module.linkUrl,
+    module.sortOrder,
+    module.visible,
+    Number(request.params.id)
+  );
+  if (result.changes === 0) response.status(404).json({ error: "Home module not found" });
+  else response.json({ ok: true });
+});
+
+adminApi.delete("/home-modules/:id", requireAdmin, (request, response) => {
+  const result = db.prepare("DELETE FROM home_modules WHERE id = ?").run(Number(request.params.id));
+  if (result.changes === 0) response.status(404).json({ error: "Home module not found" });
   else response.json({ ok: true });
 });

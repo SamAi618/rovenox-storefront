@@ -27,6 +27,17 @@ export function productRowToJson(row) {
   };
 }
 
+export function homeModuleRowToJson(row) {
+  return {
+    id: row.id,
+    moduleType: row.module_type,
+    title: row.title,
+    image: row.image_url ? row.image_url.replace(/^\//, "") : null,
+    linkUrl: row.link_url,
+    sortOrder: row.sort_order
+  };
+}
+
 publicApi.get("/products", (request, response) => {
   const rows = db.prepare(`
     SELECT products.*, media_assets.url AS image_url
@@ -47,13 +58,6 @@ publicApi.get("/home", (request, response) => {
     ORDER BY home_modules.module_type ASC, home_modules.sort_order ASC, home_modules.id ASC
   `).all();
   response.json({
-    modules: rows.map((row) => ({
-      id: row.id,
-      moduleType: row.module_type,
-      title: row.title,
-      image: row.image_url ? row.image_url.replace(/^\//, "") : null,
-      linkUrl: row.link_url,
-      sortOrder: row.sort_order
-    }))
+    modules: rows.map(homeModuleRowToJson)
   });
 });

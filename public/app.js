@@ -487,7 +487,31 @@ async function loadProducts() {
   products = data.products;
 }
 
-loadProducts()
+async function loadHomeModules() {
+  const response = await fetch("/api/public/home");
+  if (!response.ok) throw new Error(`Cannot load home modules: ${response.status}`);
+  const data = await response.json();
+  if (!Array.isArray(data.modules)) throw new Error("Invalid home modules response");
+  renderHomeModules(data.modules);
+}
+
+function renderHomeModules(modules) {
+  const brandLogoSection = document.querySelector("#brandLogoSection");
+  const imageCategorySection = document.querySelector("#imageCategorySection");
+  if (!brandLogoSection || !imageCategorySection) return;
+
+  brandLogoSection.innerHTML = modules
+    .filter((module) => module.moduleType === "brand_logo")
+    .map((module) => `<a class="brand-logo-card" href="${module.linkUrl}"><img src="${module.image}" alt="${module.title}"></a>`)
+    .join("");
+
+  imageCategorySection.innerHTML = modules
+    .filter((module) => module.moduleType === "image_category")
+    .map((module, index) => `<a class="image-category-card ${index === 3 || index === 7 ? "wide" : ""}" href="${module.linkUrl}"><img src="${module.image}" alt="${module.title}"><span>${module.title}</span></a>`)
+    .join("");
+}
+
+Promise.all([loadProducts(), loadHomeModules()])
   .catch((error) => {
     console.error(error);
   })

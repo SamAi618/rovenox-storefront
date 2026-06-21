@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { productRowToJson } from "../server/public-api.js";
+import { homeModuleRowToJson, productRowToJson } from "../server/public-api.js";
 
 test("productRowToJson maps database rows to storefront product shape", () => {
   const product = productRowToJson({
@@ -27,5 +27,25 @@ test("productRowToJson maps database rows to storefront product shape", () => {
     badge: "Time",
     tone: "tone-silver",
     image: "images/annekali/watches/watch.webp"
+  });
+});
+
+test("homeModuleRowToJson maps database rows to storefront home module shape", () => {
+  const module = homeModuleRowToJson({
+    id: 12,
+    module_type: "brand_logo",
+    title: "Chanel",
+    image_url: "/images/annekali/brands/chanel.png",
+    link_url: "#related",
+    sort_order: 4
+  });
+
+  assert.deepEqual(module, {
+    id: 12,
+    moduleType: "brand_logo",
+    title: "Chanel",
+    image: "images/annekali/brands/chanel.png",
+    linkUrl: "#related",
+    sortOrder: 4
   });
 });
