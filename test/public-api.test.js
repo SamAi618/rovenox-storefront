@@ -13,7 +13,9 @@ test("productRowToJson maps database rows to storefront product shape", () => {
     sizes_json: "[\"40mm\",\"42mm\"]",
     badge: "Time",
     tone: "tone-silver",
-    image_url: "/images/annekali/watches/watch.webp"
+    image_url: "/images/annekali/watches/watch.webp",
+    media_mime_type: "image/webp",
+    media_json: "[{\"url\":\"/images/annekali/watches/watch.webp\",\"mime_type\":\"image/webp\",\"original_name\":\"Watch\"}]"
   });
 
   assert.deepEqual(product, {
@@ -26,8 +28,35 @@ test("productRowToJson maps database rows to storefront product shape", () => {
     sizes: ["40mm", "42mm"],
     badge: "Time",
     tone: "tone-silver",
-    image: "images/annekali/watches/watch.webp"
+    image: "images/annekali/watches/watch.webp",
+    mediaType: "image/webp",
+    media: [{
+      url: "images/annekali/watches/watch.webp",
+      mediaType: "image/webp",
+      title: "Watch"
+    }]
   });
+});
+
+test("productRowToJson includes video media type for storefront rendering", () => {
+  const product = productRowToJson({
+    slug: "rn-video-01",
+    name: "Runway Clip",
+    category: "shoes",
+    price: 188,
+    description: "Video preview",
+    colors_json: "[]",
+    sizes_json: "[]",
+    badge: "Clip",
+    tone: "tone-graphite",
+    image_url: "/uploads/runway.mp4",
+    media_mime_type: "video/mp4",
+    media_json: "[]"
+  });
+
+  assert.equal(product.image, "uploads/runway.mp4");
+  assert.equal(product.mediaType, "video/mp4");
+  assert.deepEqual(product.media, []);
 });
 
 test("homeModuleRowToJson maps database rows to storefront home module shape", () => {

@@ -60,5 +60,21 @@ export function initializeDatabase() {
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (main_image_id) REFERENCES media_assets(id)
     );
+
+    CREATE TABLE IF NOT EXISTS product_media (
+      product_id INTEGER NOT NULL,
+      media_id INTEGER NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (product_id, media_id),
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+      FOREIGN KEY (media_id) REFERENCES media_assets(id)
+    );
+  `);
+
+  db.exec(`
+    INSERT OR IGNORE INTO product_media (product_id, media_id, sort_order)
+    SELECT id, main_image_id, 0
+    FROM products
+    WHERE main_image_id IS NOT NULL
   `);
 }

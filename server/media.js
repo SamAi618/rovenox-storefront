@@ -4,23 +4,31 @@ import multer from "multer";
 import { db } from "./db.js";
 import { uploadsDir } from "./paths.js";
 
-const allowedMimeTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const allowedMimeTypes = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime"
+]);
 
 const storage = multer.diskStorage({
   destination: uploadsDir,
   filename(request, file, callback) {
     const extension = path.extname(file.originalname).toLowerCase();
     const safeBase = path.basename(file.originalname, extension).replace(/[^\w-]+/g, "-").toLowerCase();
-    callback(null, `${Date.now()}-${safeBase || "image"}${extension}`);
+    callback(null, `${Date.now()}-${safeBase || "media"}${extension}`);
   }
 });
 
 export const uploadImage = multer({
   storage,
-  limits: { fileSize: 8 * 1024 * 1024 },
+  limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter(request, file, callback) {
     if (!allowedMimeTypes.has(file.mimetype)) {
-      callback(new Error(`Unsupported image type: ${file.mimetype}`));
+      callback(new Error(`Unsupported media type: ${file.mimetype}`));
       return;
     }
     callback(null, true);
@@ -86,8 +94,9 @@ export async function updateMediaAsset(id, { title = "", file = null } = {}) {
 
 export function mediaUsageCount(id) {
   const productCount = db.prepare("SELECT COUNT(*) AS count FROM products WHERE main_image_id = ?").get(id).count;
+  const productMediaCount = db.prepare("SELECT COUNT(*) AS count FROM product_media WHERE media_id = ?").get(id).count;
   const moduleCount = db.prepare("SELECT COUNT(*) AS count FROM home_modules WHERE image_id = ?").get(id).count;
-  return productCount + moduleCount;
+  return productCount + productMediaCount + moduleCount;
 }
 
 export async function deleteMediaAsset(id) {
